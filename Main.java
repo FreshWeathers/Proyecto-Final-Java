@@ -1,224 +1,188 @@
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
+    static ArrayList<Libro> libros = new ArrayList<>();
+    static ArrayList<Cliente> clientes = new ArrayList<>();
+    static ArrayList<Prestamo> prestamos = new ArrayList<>();
+    static ArrayList<Empleado> empleados = new ArrayList<>();
+    static Scanner scanner = new Scanner(System.in);
+
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-
-        // Crear instancia de SaveManager
-        SaveManager saveManager = new SaveManager();
-        
-        // Cargar datos desde el archivo
-        Object[] datosCargados = saveManager.cargarEstado();
-        GestionClientes gestionClientes = (GestionClientes) datosCargados[0];
-        ArrayList<Libro> libros = new ArrayList<>();
-        ArrayList<Prestamo> prestamos = new ArrayList<>();
-        ArrayList<Empleado> empleados = new ArrayList<>();
-
-        // Verificar que los datos cargados sean del tipo esperado antes de hacer el cast
-        if (datosCargados[1] instanceof List<?>) {
-            List<?> tempLibros = (List<?>) datosCargados[1];
-            if (!tempLibros.isEmpty() && tempLibros.get(0) instanceof Libro) {
-                for (Object obj : tempLibros) {
-                    if (obj instanceof Libro) {
-                        libros.add((Libro) obj);
-                    }
-                }
-            }
-        }
-        
-        if (datosCargados[2] instanceof List<?>) {
-            List<?> tempPrestamos = (List<?>) datosCargados[2];
-            if (!tempPrestamos.isEmpty() && tempPrestamos.get(0) instanceof Prestamo) {
-                for (Object obj : tempPrestamos) {
-                    if (obj instanceof Prestamo) {
-                        prestamos.add((Prestamo) obj);
-                    }
-                }
-            }
-        }
-
-        if (datosCargados[3] instanceof List<?>) {
-            List<?> tempEmpleados = (List<?>) datosCargados[3];
-            if (!tempEmpleados.isEmpty() && tempEmpleados.get(0) instanceof Empleado) {
-                for (Object obj : tempEmpleados) {
-                    if (obj instanceof Empleado) {
-                        empleados.add((Empleado) obj);
-                    }
-                }
-            }
-        }
-
-        // Si no hay empleados registrados, agregar uno por defecto
-        if (empleados.isEmpty()) {
-            Empleado empleadoInicial = new Empleado("Juan", "clave123", "juan@example.com", "123456789");
-            empleados.add(empleadoInicial);
-        }
-
-        // Menú de interacción
         while (true) {
-            System.out.println("\n--- Menú ---");
-            System.out.println("1. Registrar nuevo empleado");
-            System.out.println("2. Iniciar sesión como empleado");
-            System.out.println("3. Iniciar sesión como cliente");
-            System.out.println("4. Salir");
-            System.out.print("Seleccione una opción: ");
+            System.out.println("---- Menú Principal ----");
+            System.out.println("1. Registrar Cliente");
+            System.out.println("2. Registrar Empleado");
+            System.out.println("3. Registrar Libro");
+            System.out.println("4. Realizar Préstamo");
+            System.out.println("5. Finalizar Préstamo");
+            System.out.println("6. Generar Reporte");
+            System.out.println("0. Salir");
+            System.out.print("Selecciona una opción: ");
+            
             int opcion = scanner.nextInt();
-            scanner.nextLine();
-
+            scanner.nextLine(); // Limpiar el buffer
+            
             switch (opcion) {
                 case 1:
-                    System.out.print("Ingrese el nombre del nuevo empleado: ");
-                    String nombre = scanner.nextLine();
-                    System.out.print("Ingrese la contraseña del nuevo empleado: ");
-                    String password = scanner.nextLine();
-                    System.out.print("Ingrese el correo del nuevo empleado: ");
-                    String correo = scanner.nextLine();
-                    System.out.print("Ingrese el teléfono del nuevo empleado: ");
-                    String telefono = scanner.nextLine();
-                    Empleado nuevoEmpleado = new Empleado(nombre, password, correo, telefono);
-                    empleados.add(nuevoEmpleado);
-                    System.out.println("Empleado " + nombre + " registrado exitosamente.");
-                    
-                    // Guardar cambios
-                    saveManager.guardarEstado(gestionClientes, libros, prestamos, empleados);
+                    registrarCliente();
                     break;
-
                 case 2:
-                    System.out.print("Ingrese contraseña de empleado: ");
-                    String passwordEmpleado = scanner.nextLine();
-                    boolean empleadoEncontrado = false;
-
-                    for (Empleado empleado : empleados) {
-                        if (empleado.iniciarSesion(passwordEmpleado)) {
-                            empleadoEncontrado = true;
-                            System.out.println(empleado.getNombre() + " ha iniciado sesión como empleado.");
-                            // Menú de empleado
-                            menuEmpleado(scanner, libros, prestamos, gestionClientes);
-                            break;
-                        }
-                    }
-
-                    if (!empleadoEncontrado) {
-                        System.out.println("Contraseña incorrecta.");
-                    }
+                    registrarEmpleado();
                     break;
-
                 case 3:
-                    System.out.print("Ingrese su nombre de usuario: ");
-                    String nombreClienteLogin = scanner.nextLine();
-                    System.out.print("Ingrese su contraseña: ");
-                    String passwordClienteLogin = scanner.nextLine();
-                
-                    Cliente clienteEncontrado = gestionClientes.buscarCliente(nombreClienteLogin, passwordClienteLogin);
-                    if (clienteEncontrado != null) {
-                        System.out.println("Inicio de sesión exitoso. Bienvenido, " + clienteEncontrado.getNombre() + "!");
-                        // Menú de cliente
-                        menuCliente(scanner, clienteEncontrado, prestamos);
-                    } else {
-                        System.out.println("Nombre de usuario o contraseña incorrectos. Intente nuevamente.");
-                    }
+                    registrarLibro();
                     break;
-
                 case 4:
-                    System.out.println("Guardando estado y saliendo...");
-                    saveManager.guardarEstado(gestionClientes, libros, prestamos, empleados);
-                    scanner.close();
-                    System.exit(0);
+                    registrarPrestamo();
                     break;
-
+                case 5:
+                    finalizarPrestamo();
+                    break;
+                case 6:
+                    generarReporte();
+                    break;
+                case 0:
+                    System.out.println("Saliendo del sistema...");
+                    return; // Salir del programa
                 default:
                     System.out.println("Opción no válida.");
-                    break;
             }
         }
     }
 
-    private static void menuEmpleado(Scanner scanner, ArrayList<Libro> libros, ArrayList<Prestamo> prestamos, GestionClientes gestionClientes) {
-        while (true) {
-            System.out.println("\n--- Menú Empleado ---");
-            System.out.println("1. Ver libros");
-            System.out.println("2. Registrar préstamo");
-            System.out.println("3. Salir");
-            System.out.print("Seleccione una opción: ");
-            int opcionEmpleado = scanner.nextInt();
-            scanner.nextLine();
+    public static void registrarCliente() {
+        System.out.print("ID del cliente: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+        System.out.print("Nombre del cliente: ");
+        String nombre = scanner.nextLine();
+        System.out.print("Correo del cliente: ");
+        String correo = scanner.nextLine();
+        System.out.print("Teléfono del cliente: ");
+        String telefono = scanner.nextLine();
 
-            switch (opcionEmpleado) {
-                case 1:
-                    System.out.println("Libros registrados:");
-                    for (Libro libro : libros) {
-                        System.out.println(libro.getTitulo() + " por " + libro.getAutor());
-                    }
-                    break;
-
-                case 2:
-                    System.out.print("Ingrese el cliente para registrar el préstamo: ");
-                    String clienteNombre = scanner.nextLine();
-                    Cliente cliente = gestionClientes.buscarClientePorNombre(clienteNombre);
-                    if (cliente != null) {
-                        System.out.print("Ingrese el título del libro: ");
-                        String libroTitulo = scanner.nextLine();
-                        Libro libro = buscarLibroPorTitulo(libros, libroTitulo);
-                        if (libro != null) {
-                            Prestamo nuevoPrestamo = new Prestamo(cliente, libro);
-                            prestamos.add(nuevoPrestamo);
-                            System.out.println("Préstamo registrado exitosamente.");
-                        } else {
-                            System.out.println("Libro no encontrado.");
-                        }
-                    } else {
-                        System.out.println("Cliente no encontrado.");
-                    }
-                    break;
-
-                case 3:
-                    return; // Salir del menú de empleado
-
-                default:
-                    System.out.println("Opción no válida.");
-                    break;
-            }
-        }
+        Cliente cliente = new Cliente(id, nombre, correo, telefono);
+        clientes.add(cliente);
     }
 
-    private static void menuCliente(Scanner scanner, Cliente cliente, ArrayList<Prestamo> prestamos) {
-        while (true) {
-            System.out.println("\n--- Menú Cliente ---");
-            System.out.println("1. Ver mis préstamos");
-            System.out.println("2. Salir");
-            System.out.print("Seleccione una opción: ");
-            int opcionCliente = scanner.nextInt();
-            scanner.nextLine();
+    public static void registrarEmpleado() {
+        System.out.print("ID del empleado: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+        System.out.print("Nombre del empleado: ");
+        String nombre = scanner.nextLine();
+        System.out.print("Correo del empleado: ");
+        String correo = scanner.nextLine();
+        System.out.print("Teléfono del empleado: ");
+        String telefono = scanner.nextLine();
+        System.out.print("Cargo del empleado: ");
+        String cargo = scanner.nextLine();
 
-            switch (opcionCliente) {
-                case 1:
-                    System.out.println("Mis préstamos:");
-                    for (Prestamo prestamo : prestamos) {
-                        if (prestamo.getCliente().equals(cliente)) {
-                            System.out.println(prestamo.getLibro().getTitulo() + " - Fecha: " + prestamo.getFecha());
-                        }
-                    }
-                    break;
-
-                case 2:
-                    return; // Salir del menú de cliente
-
-                default:
-                    System.out.println("Opción no válida.");
-                    break;
-            }
-        }
+        Empleado empleado = new Empleado(id, nombre, correo, telefono, cargo);
+        empleados.add(empleado);
     }
 
-    private static Libro buscarLibroPorTitulo(ArrayList<Libro> libros, String titulo) {
-        for (Libro libro : libros) {
-            if (libro.getTitulo().equalsIgnoreCase(titulo)) {
-                return libro;
-            }
-        }
-        return null;
+    public static void registrarLibro() {
+        System.out.print("ID del libro: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+        System.out.print("Título del libro: ");
+        String titulo = scanner.nextLine();
+        System.out.print("Autor del libro: ");
+        String autor = scanner.nextLine();
+        System.out.print("Año de publicación: ");
+        int anio = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+        System.out.print("Género del libro: ");
+        String genero = scanner.nextLine();
+        System.out.print("Cantidad total de ejemplares: ");
+        int cantidadTotal = scanner.nextInt();
+        System.out.print("Cantidad disponible de ejemplares: ");
+        int cantidadDisponible = scanner.nextInt();
+
+        Libro libro = new Libro(id, titulo, autor, anio, genero, cantidadTotal, cantidadDisponible);
+        libros.add(libro);
     }
+
+    // Método para registrar préstamos
+    public static void registrarPrestamo() {
+        // Implementación de préstamo
+        System.out.println("Registrar préstamo...");
+    }
+
+    // Método para finalizar préstamos
+    public static void finalizarPrestamo() {
+        // Implementación de finalizar préstamo
+        System.out.println("Finalizar préstamo...");
+    }
+
+    // Método para generar reporte
+    public static void generarReporte() {
+        // Implementación de reporte
+        System.out.println("Generando reporte...");
+    }
+}
+
+// Clase Cliente
+class Cliente {
+    int id;
+    String nombre;
+    String correo;
+    String telefono;
+
+    public Cliente(int id, String nombre, String correo, String telefono) {
+        this.id = id;
+        this.nombre = nombre;
+        this.correo = correo;
+        this.telefono = telefono;
+    }
+
+    // Métodos relacionados con Cliente (si es necesario)
+}
+
+// Clase Empleado
+class Empleado {
+    int id;
+    String nombre;
+    String correo;
+    String telefono;
+    String cargo;
+
+    public Empleado(int id, String nombre, String correo, String telefono, String cargo) {
+        this.id = id;
+        this.nombre = nombre;
+        this.correo = correo;
+        this.telefono = telefono;
+        this.cargo = cargo;
+    }
+
+    // Métodos para registrar préstamos, finalizar préstamos, generar reportes...
+}
+
+// Clase Libro
+class Libro {
+    int id;
+    String titulo;
+    String autor;
+    int anio;
+    String genero;
+    int cantidadTotal;
+    int cantidadDisponible;
+
+    public Libro(int id, String titulo, String autor, int anio, String genero, int cantidadTotal, int cantidadDisponible) {
+        this.id = id;
+        this.titulo = titulo;
+        this.autor = autor;
+        this.anio = anio;
+        this.genero = genero;
+        this.cantidadTotal = cantidadTotal;
+        this.cantidadDisponible = cantidadDisponible;
+    }
+
+    // Métodos relacionados con Libro (si es necesario)
+}
+
+// Clase Prestamo
+class Prestamo {
+    // Atributos y métodos del préstamo
 }
